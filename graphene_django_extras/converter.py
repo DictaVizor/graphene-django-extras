@@ -98,7 +98,8 @@ def convert_django_field_with_choices(
                 def description(self):
                     return named_choices_descriptions[self.name]
 
-            enum = Enum(name, list(named_choices), type=EnumWithDescriptionsType)
+            enum = Enum(name, list(named_choices),
+                        type=EnumWithDescriptionsType)
             registry.register_enum(name, enum)
 
         if type(field).__name__ == "MultiSelectField":
@@ -145,7 +146,7 @@ def construct_fields(
             if input_flag == "create" and name == "id":
                 continue
             is_included = include_fields and name in include_fields
-            nested_field = name in nested_fields
+            nested_field = nested_field.pop(name, None)
             is_not_in_only = only_fields and name not in only_fields
             # is_already_created = name in options.fields
             is_excluded = (
@@ -163,7 +164,8 @@ def construct_fields(
                 input_flag
                 and not field.editable
                 and not isinstance(
-                    field, (models.fields.related.ForeignObjectRel, GenericForeignKey)
+                    field, (models.fields.related.ForeignObjectRel,
+                            GenericForeignKey)
                 )
             ):
                 continue
@@ -203,7 +205,7 @@ def convert_field_to_id(field, registry=None, input_flag=None, nested_field=Fals
     if input_flag:
         return ID(
             description=field.help_text or "Django object unique identification field",
-            required=input_flag == "update" or (input_flag == "nested_update" and not nested_field),
+            required=input_flag == "update",
         )
     return ID(
         description=field.help_text or "Django object unique identification field",
@@ -293,6 +295,14 @@ def convert_time_to_string(field, registry=None, input_flag=None, nested_field=F
     )
 
 
+def get_type_for_relation(model, registry=None, input_flag=None, nested_field=False):
+    required = nested_field.pop("update_and_create", False)
+    if required:
+        return registry.get_type_for_model(
+            model, for_input="update_or_create")
+    return registry.get_type_for_model(model, for_input=input_flag)
+
+
 @convert_django_field.register(models.OneToOneRel)
 def convert_onetoone_field_to_djangomodel(
     field, registry=None, input_flag=None, nested_field=False
@@ -302,7 +312,9 @@ def convert_onetoone_field_to_djangomodel(
     def dynamic_type():
         if input_flag and not nested_field:
             return ID()
-        _type = registry.get_type_for_model(model, for_input=input_flag)
+
+        _type = get_type_for_relation(model, registry, input_flag, nested_field)
+
         if not _type:
             return
         return Field(_type, required=is_required(field) and input_flag == "create")
@@ -324,8 +336,9 @@ def convert_field_to_list_or_connection(
                 description=field.help_text or field.verbose_name,
             )
         else:
-            _type = registry.get_type_for_model(model, for_input=input_flag)
-            if not _type:
+            _type = get_type_for_relation(
+                model, registry, input_flag, nested_field)
+           if not _type:
                 return
             elif input_flag and nested_field:
                 return DjangoListField(_type)
@@ -358,7 +371,7 @@ def convert_many_rel_to_djangomodel(
         if input_flag and not nested_field:
             return DjangoListField(ID)
         else:
-            _type = registry.get_type_for_model(model, for_input=input_flag)
+            _type = get_type_for_relation(model, registry, input_flag, nested_field)
             if not _type:
                 return
             elif input_flag and nested_field:
@@ -371,7 +384,8 @@ def convert_many_rel_to_djangomodel(
                 )
             else:
                 return DjangoListField(
-                    _type, required=is_required(field) and input_flag == "create"
+                    _type, required=is_required(
+                        field) and input_flag == "create"
                 )
 
     return Dynamic(dynamic_type)
@@ -432,7 +446,8 @@ def convert_generic_foreign_key_to_object(
                 break
 
         if ct_field is not None and fk_field is not None:
-            required = (is_required(ct_field) and is_required(fk_field)) or required
+            required = (is_required(ct_field)
+                        and is_required(fk_field)) or required
 
         if input_flag:
             return GenericForeignKeyInputType(

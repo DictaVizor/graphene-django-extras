@@ -30,7 +30,8 @@ class DjangoSerializerMutation(ObjectType):
         Serializer Mutation Type Definition
     """
 
-    ok = Boolean(description="Boolean field that return mutation result request.")
+    ok = Boolean(
+        description="Boolean field that return mutation result request.")
     errors = List(ErrorType, description="Errors list for the field")
 
     class Meta:
@@ -61,7 +62,8 @@ class DjangoSerializerMutation(ObjectType):
             model.__name__
         )
 
-        input_field_name = input_field_name or "new_{}".format(model._meta.model_name)
+        input_field_name = input_field_name or "new_{}".format(
+            model._meta.model_name)
         output_field_name = output_field_name or model._meta.model_name
 
         input_class = getattr(cls, "Arguments", None)
@@ -95,16 +97,18 @@ class DjangoSerializerMutation(ObjectType):
         output_type = registry.get_type_for_model(model)
 
         if not output_type:
-            output_type = factory_type("output", DjangoObjectType, **factory_kwargs)
+            output_type = factory_type(
+                "output", DjangoObjectType, **factory_kwargs)
 
         django_fields = OrderedDict({output_field_name: Field(output_type)})
 
         global_arguments = {}
-        for operation in ("create", "delete", "update"):
+        for operation in ("create", "delete", "update", "update_or_create"):
             global_arguments.update({operation: OrderedDict()})
 
             if operation != "delete":
-                input_type = registry.get_type_for_model(model, for_input=operation)
+                input_type = registry.get_type_for_model(
+                    model, for_input=operation)
 
                 if not input_type:
                     # factory_kwargs.update({'skip_registry': True})
@@ -144,7 +148,8 @@ class DjangoSerializerMutation(ObjectType):
 
     @classmethod
     def get_errors(cls, errors):
-        errors_dict = {cls._meta.output_field_name: None, "ok": False, "errors": errors}
+        errors_dict = {cls._meta.output_field_name: None,
+                       "ok": False, "errors": errors}
 
         return cls(**errors_dict)
 
@@ -166,7 +171,8 @@ class DjangoSerializerMutation(ObjectType):
                 sub_data = data.pop(field, None)
                 if sub_data:
                     serialized_data = cls._meta.nested_fields[field](
-                        data=sub_data, many=True if type(sub_data) == list else False
+                        data=sub_data, many=True if type(
+                            sub_data) == list else False
                     )
                     ok, result = cls.save(serialized_data, root, info)
                     if not ok:
@@ -182,7 +188,8 @@ class DjangoSerializerMutation(ObjectType):
         data = kwargs.get(cls._meta.input_field_name)
         request_type = info.context.META.get("CONTENT_TYPE", "")
         if "multipart/form-data" in request_type:
-            data.update({name: value for name, value in info.context.FILES.items()})
+            data.update(
+                {name: value for name, value in info.context.FILES.items()})
 
         nested_objs = cls.manage_nested_fields(data, root, info)
         serializer = cls._meta.serializer_class(
@@ -193,7 +200,8 @@ class DjangoSerializerMutation(ObjectType):
         if not ok:
             return cls.get_errors(obj)
         elif nested_objs:
-            [getattr(obj, field).add(*objs) for field, objs in nested_objs.items()]
+            [getattr(obj, field).add(*objs)
+             for field, objs in nested_objs.items()]
         return cls.perform_mutate(obj, info)
 
     @classmethod
@@ -224,7 +232,8 @@ class DjangoSerializerMutation(ObjectType):
         data = kwargs.get(cls._meta.input_field_name)
         request_type = info.context.META.get("CONTENT_TYPE", "")
         if "multipart/form-data" in request_type:
-            data.update({name: value for name, value in info.context.FILES.items()})
+            data.update(
+                {name: value for name, value in info.context.FILES.items()})
 
         pk = data.pop("id")
         old_obj = get_Object_or_None(cls._meta.model, pk=pk)
@@ -241,7 +250,8 @@ class DjangoSerializerMutation(ObjectType):
             if not ok:
                 return cls.get_errors(obj)
             elif nested_objs:
-                [getattr(obj, field).add(*objs) for field, objs in nested_objs.items()]
+                [getattr(obj, field).add(*objs)
+                 for field, objs in nested_objs.items()]
             return cls.perform_mutate(obj, info)
         else:
             return cls.get_errors(
@@ -314,12 +324,14 @@ class DjangoSerializerMutation(ObjectType):
 
         return create_field, delete_field, update_field
 
+
 class DjangoNestedSerializerMutation(ObjectType):
     """
         Serializer Mutation Type Definition
     """
 
-    ok = Boolean(description="Boolean field that return mutation result request.")
+    ok = Boolean(
+        description="Boolean field that return mutation result request.")
     errors = List(ErrorType, description="Errors list for the field")
 
     class Meta:
@@ -350,7 +362,8 @@ class DjangoNestedSerializerMutation(ObjectType):
             model.__name__
         )
 
-        input_field_name = input_field_name or "new_{}".format(model._meta.model_name)
+        input_field_name = input_field_name or "new_{}".format(
+            model._meta.model_name)
         output_field_name = output_field_name or model._meta.model_name
 
         input_class = getattr(cls, "Arguments", None)
@@ -384,7 +397,8 @@ class DjangoNestedSerializerMutation(ObjectType):
         output_type = registry.get_type_for_model(model)
 
         if not output_type:
-            output_type = factory_type("output", DjangoObjectType, **factory_kwargs)
+            output_type = factory_type(
+                "output", DjangoObjectType, **factory_kwargs)
 
         django_fields = OrderedDict({output_field_name: Field(output_type)})
 
@@ -393,7 +407,8 @@ class DjangoNestedSerializerMutation(ObjectType):
             global_arguments.update({operation: OrderedDict()})
 
             if operation != "delete":
-                input_type = registry.get_type_for_model(model, for_input=operation)
+                input_type = registry.get_type_for_model(
+                    model, for_input=operation)
 
                 if not input_type:
                     # factory_kwargs.update({'skip_registry': True})
@@ -433,7 +448,8 @@ class DjangoNestedSerializerMutation(ObjectType):
 
     @classmethod
     def get_errors(cls, errors):
-        errors_dict = {cls._meta.output_field_name: None, "ok": False, "errors": errors}
+        errors_dict = {cls._meta.output_field_name: None,
+                       "ok": False, "errors": errors}
 
         return cls(**errors_dict)
 
@@ -452,7 +468,8 @@ class DjangoNestedSerializerMutation(ObjectType):
         data = kwargs.get(cls._meta.input_field_name)
         request_type = info.context.META.get("CONTENT_TYPE", "")
         if "multipart/form-data" in request_type:
-            data.update({name: value for name, value in info.context.FILES.items()})
+            data.update(
+                {name: value for name, value in info.context.FILES.items()})
 
         serializer = cls._meta.serializer_class(
             data=data, **cls.get_serializer_kwargs(root, info, **kwargs)
@@ -491,7 +508,8 @@ class DjangoNestedSerializerMutation(ObjectType):
         data = kwargs.get(cls._meta.input_field_name)
         request_type = info.context.META.get("CONTENT_TYPE", "")
         if "multipart/form-data" in request_type:
-            data.update({name: value for name, value in info.context.FILES.items()})
+            data.update(
+                {name: value for name, value in info.context.FILES.items()})
 
         pk = data.pop("id")
         old_obj = get_Object_or_None(cls._meta.model, pk=pk)
@@ -571,7 +589,7 @@ class DjangoNestedSerializerMutation(ObjectType):
         )
 
     @classmethod
-    def NestedUpdate(cls, *args, **kwargs):
+    def NestedUpdateField(cls, *args, **kwargs):
         return Field(
             cls._meta.output,
             args=cls._meta.arguments["nested_update"],

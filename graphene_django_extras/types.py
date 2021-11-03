@@ -173,7 +173,7 @@ class DjangoInputObjectType(InputObjectType):
             'Registry, received "{}".'
         ).format(cls.__name__, registry)
 
-        assert input_for.lower not in ("create", "delete", "update", "nested_update"), (
+        assert input_for.lower not in ("create", "delete", "update", "update_or_create"), (
             'You need to pass a valid input_for value in {}.Meta, received "{}".'
         ).format(cls.__name__, input_for)
 
