@@ -338,7 +338,7 @@ def convert_field_to_list_or_connection(
         else:
             _type = get_type_for_relation(
                 model, registry, input_flag, nested_field)
-           if not _type:
+            if not _type:
                 return
             elif input_flag and nested_field:
                 return DjangoListField(_type)
@@ -371,7 +371,8 @@ def convert_many_rel_to_djangomodel(
         if input_flag and not nested_field:
             return DjangoListField(ID)
         else:
-            _type = get_type_for_relation(model, registry, input_flag, nested_field)
+            _type = get_type_for_relation(
+                model, registry, input_flag, nested_field)
             if not _type:
                 return
             elif input_flag and nested_field:
