@@ -203,7 +203,7 @@ def convert_field_to_id(field, registry=None, input_flag=None, nested_field=Fals
     if input_flag:
         return ID(
             description=field.help_text or "Django object unique identification field",
-            required=input_flag == "update",
+            required=input_flag == "update" or (input_flag == "nested_update" and not nested_field),
         )
     return ID(
         description=field.help_text or "Django object unique identification field",
