@@ -122,7 +122,7 @@ def construct_fields(
     include_fields,
     exclude_fields,
     input_flag=None,
-    nested_fields=(),
+    nested_fields={},
 ):
     _model_fields = get_model_fields(model)
 
@@ -146,7 +146,8 @@ def construct_fields(
             if input_flag == "create" and name == "id":
                 continue
             is_included = include_fields and name in include_fields
-            nested_field = nested_field.pop(name, None)
+            nested_field = nested_fields.pop(name, None) if isinstance(
+                nested_fields, dict) else name in nested_fields
             is_not_in_only = only_fields and name not in only_fields
             # is_already_created = name in options.fields
             is_excluded = (
@@ -296,7 +297,8 @@ def convert_time_to_string(field, registry=None, input_flag=None, nested_field=F
 
 
 def get_type_for_relation(model, registry=None, input_flag=None, nested_field=False):
-    required = nested_field.pop("update_and_create", False)
+    required = nested_field.pop("update_and_create", False) if isinstance(
+        nested_field, dict) else False
     if required:
         return registry.get_type_for_model(
             model, for_input="update_or_create")
@@ -313,7 +315,8 @@ def convert_onetoone_field_to_djangomodel(
         if input_flag and not nested_field:
             return ID()
 
-        _type = get_type_for_relation(model, registry, input_flag, nested_field)
+        _type = get_type_for_relation(
+            model, registry, input_flag, nested_field)
 
         if not _type:
             return
