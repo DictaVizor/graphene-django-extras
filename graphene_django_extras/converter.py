@@ -297,7 +297,7 @@ def convert_time_to_string(field, registry=None, input_flag=None, nested_field=F
 
 
 def get_type_for_relation(model, registry=None, input_flag=None, nested_field=False):
-    required = nested_field.pop("update_and_create", False) if isinstance(
+    required = nested_field.pop("update_or_create", False) if isinstance(
         nested_field, dict) else False
     if required:
         return registry.get_type_for_model(
@@ -414,7 +414,7 @@ def convert_field_to_djangomodel(
                 required=is_required(field) and input_flag == "create",
             )
 
-        _type = registry.get_type_for_model(model, for_input=input_flag)
+        _type = get_type_for_relation(model, registry, input_flag, nested_field)
         if not _type:
             return
 
@@ -483,7 +483,8 @@ def convert_generic_relation_to_object_list(
         if input_flag:
             return
 
-        _type = registry.get_type_for_model(model)
+        _type = get_type_for_relation(
+            model, registry, input_flag, nested_field)
         if not _type:
             return
         return DjangoListField(_type)

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from collections import OrderedDict
 
+from django.conf import settings
+
 from graphene import Boolean, List, Field, ID, Argument, ObjectType
 from graphene.types.base import BaseOptions
 from graphene.utils.deprecated import warn_deprecation
@@ -24,6 +26,7 @@ class SerializerMutationOptions(BaseOptions):
     resolver = None
     nested_fields = None
     auto_handle_nested_fields = False
+    register_types = True
 
 
 class DjangoSerializerMutation(ObjectType):
@@ -105,6 +108,7 @@ class DjangoSerializerMutation(ObjectType):
         django_fields = OrderedDict({output_field_name: Field(output_type)})
 
         global_arguments = {}
+        input_types = {}
         for operation in ("create", "delete", "update", "update_or_create"):
             global_arguments.update({operation: OrderedDict()})
 
@@ -117,6 +121,7 @@ class DjangoSerializerMutation(ObjectType):
                     input_type = factory_type(
                         "input", DjangoInputObjectType, operation, **factory_kwargs
                     )
+                input_types[operation] = input_type
 
                 global_arguments[operation].update(
                     {input_field_name: Argument(input_type, required=True)}
@@ -144,6 +149,7 @@ class DjangoSerializerMutation(ObjectType):
         _meta.output_field_name = output_field_name
         _meta.nested_fields = nested_fields
         _meta.auto_handle_nested_fields = auto_handle_nested_fields
+        _meta.input_types = input_types
 
         super(DjangoSerializerMutation, cls).__init_subclass_with_meta__(
             _meta=_meta, description=description, **options
@@ -339,3 +345,14 @@ class DjangoSerializerMutation(ObjectType):
         update_or_create_field = cls.UpdateOrCreateField(*args, **kwargs)
 
         return create_field, delete_field, update_field, update_or_create_field
+
+    @classmethod
+    def MutationTypes(cls, operations=[]):
+        if len(operations) == 0:
+            _operations = ["update", "create", "delete", "update_or_create"]
+        else:
+            _operations = operations
+        types = []
+        for operation in _operations:
+            types.append(cls._meta.input_types[operation])
+        return types
