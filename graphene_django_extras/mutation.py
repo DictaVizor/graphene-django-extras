@@ -427,7 +427,7 @@ class DjangoNestedSerializerMutation(ObjectType):
         _meta.output_field_name = output_field_name
         _meta.nested_fields = nested_fields
 
-        super(DjangoSerializerMutation, cls).__init_subclass_with_meta__(
+        super(DjangoNestedSerializerMutation, cls).__init_subclass_with_meta__(
             _meta=_meta, description=description, **options
         )
 
