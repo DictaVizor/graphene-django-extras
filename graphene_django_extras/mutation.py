@@ -571,9 +571,19 @@ class DjangoNestedSerializerMutation(ObjectType):
         )
 
     @classmethod
+    def NestedUpdate(cls, *args, **kwargs):
+        return Field(
+            cls._meta.output,
+            args=cls._meta.arguments["nested_update"],
+            resolver=cls.update,
+            **kwargs
+        )
+
+    @classmethod
     def MutationFields(cls, *args, **kwargs):
         create_field = cls.CreateField(*args, **kwargs)
         delete_field = cls.DeleteField(*args, **kwargs)
         update_field = cls.UpdateField(*args, **kwargs)
+        nested_update_field = cls.NestedUpdate(*args, **kwargs)
 
-        return create_field, delete_field, update_field
+        return create_field, delete_field, update_field, nested_update_field
