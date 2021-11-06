@@ -208,7 +208,7 @@ class DjangoSerializerMutation(ObjectType):
             data=data, **cls.get_serializer_kwargs(root, info, **kwargs)
         )
 
-        ok, obj = cls.save(serializer, root, info)
+        ok, obj = cls.save(serializer, root, info, "create")
         if not ok:
             return cls.get_errors(obj)
         elif nested_objs:
@@ -258,7 +258,7 @@ class DjangoSerializerMutation(ObjectType):
                 **cls.get_serializer_kwargs(root, info, **kwargs),
             )
 
-            ok, obj = cls.save(serializer, root, info)
+            ok, obj = cls.save(serializer, root, info, "update")
             if not ok:
                 return cls.get_errors(obj)
             elif nested_objs:
@@ -280,7 +280,7 @@ class DjangoSerializerMutation(ObjectType):
             )
 
     @classmethod
-    def save(cls, serialized_obj, root, info, **kwargs):
+    def save(cls, serialized_obj, root, info, mode, **kwargs):
         """
         graphene-django v3 now returns the full Enum object, instead of its value.
         We need to get its value before validating the submitted data.
@@ -291,7 +291,7 @@ class DjangoSerializerMutation(ObjectType):
                     key
                 ].value
         if serialized_obj.is_valid():
-            obj = serialized_obj.save()
+            obj = cls.serializer_save(serialized_obj, root, info, mode)
             return True, obj
 
         else:
@@ -300,6 +300,10 @@ class DjangoSerializerMutation(ObjectType):
                 for key, value in serialized_obj.errors.items()
             ]
             return False, errors
+
+    @classmethod
+    def serializer_save(cls, serialized_obj, root, info, mode):
+        return serialized_obj.save()
 
     @classmethod
     def CreateField(cls, *args, **kwargs):
