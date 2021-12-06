@@ -50,6 +50,14 @@ class Registry(object):
         )
         return self._registry.get(to_camel_case(key))
 
+    def get_type_for_serializer(self, serializer, for_input=None):
+        key = (
+            "{}_{}".format(serializer.__name__.lower(), for_input)
+            if for_input
+            else serializer.__name__.lower()
+        )
+        return self._registry.get(to_camel_case(key))
+
 
 registry = None
 

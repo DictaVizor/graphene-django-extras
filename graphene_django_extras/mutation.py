@@ -27,6 +27,7 @@ class SerializerMutationOptions(BaseOptions):
     nested_fields = None
     auto_handle_nested_fields = False
     register_types = True
+    name = None
 
 
 class DjangoSerializerMutation(ObjectType):
@@ -53,6 +54,7 @@ class DjangoSerializerMutation(ObjectType):
         description="",
         nested_fields=(),
         auto_handle_nested_fields=False,
+        name=None,
         **options,
     ):
 
@@ -97,6 +99,7 @@ class DjangoSerializerMutation(ObjectType):
             "nested_fields": nested_fields,
             "registry": registry,
             "skip_registry": False,
+            "name": name,
         }
 
         output_type = registry.get_type_for_model(model)
@@ -114,7 +117,7 @@ class DjangoSerializerMutation(ObjectType):
 
             if operation != "delete":
                 input_type = registry.get_type_for_model(
-                    model, for_input=operation)
+                    serializer_class or model, for_input=operation)
 
                 if not input_type:
                     # factory_kwargs.update({'skip_registry': True})

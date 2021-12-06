@@ -104,7 +104,8 @@ class DjangoFilterListField(Field):
         if not kwargs.get("description", None):
             kwargs["description"] = "{} list".format(_type._meta.model.__name__)
 
-        super(DjangoFilterListField, self).__init__(List(_type), *args, **kwargs)
+        super(DjangoFilterListField, self).__init__(
+            List(_type), *args, **kwargs)
 
     @property
     def model(self):
@@ -118,7 +119,8 @@ class DjangoFilterListField(Field):
         if root and is_valid_django_model(root._meta.model):
             available_related_fields = get_related_fields(root._meta.model)
             field = find_field(info.field_nodes[0], available_related_fields)
-        filter_kwargs = {k: v for k, v in kwargs.items() if k in filtering_args}
+        filter_kwargs = {k: v for k, v in kwargs.items(
+        ) if k in filtering_args and v is not None}
 
         if field is not None:
             try:
@@ -236,7 +238,8 @@ class DjangoFilterPaginateListField(Field):
     ):
         filter_kwargs = {k: v for k, v in kwargs.items() if k in filtering_args}
         qs = self.get_queryset(manager, root, info, **kwargs)
-        qs = filterset_class(data=filter_kwargs, queryset=qs, request=info.context).qs
+        qs = filterset_class(data=filter_kwargs, queryset=qs,
+                             request=info.context).qs
 
         if root and is_valid_django_model(root._meta.model):
             extra_filters = get_extra_filters(root, manager.model)
@@ -293,7 +296,8 @@ class DjangoListObjectField(Field):
                 self.filtering_args.update(
                     {"id": Argument(ID, description=id_description)}
                 )
-                kwargs["args"].update({"id": Argument(ID, description=id_description)})
+                kwargs["args"].update(
+                    {"id": Argument(ID, description=id_description)})
 
         if not kwargs.get("description", None):
             kwargs["description"] = "{} list".format(_type._meta.model.__name__)
@@ -312,7 +316,8 @@ class DjangoListObjectField(Field):
 
         filter_kwargs = {k: v for k, v in kwargs.items() if k in filtering_args}
 
-        qs = filterset_class(data=filter_kwargs, queryset=qs, request=info.context).qs
+        qs = filterset_class(data=filter_kwargs, queryset=qs,
+                             request=info.context).qs
         count = qs.count()
 
         return DjangoListObjectBase(
