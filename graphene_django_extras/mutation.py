@@ -28,6 +28,8 @@ class SerializerMutationOptions(BaseOptions):
     auto_handle_nested_fields = False
     register_types = True
     name = None
+    arguments_in_input = True
+    override_arguments = {}
 
 
 class DjangoSerializerMutation(ObjectType):
@@ -55,6 +57,8 @@ class DjangoSerializerMutation(ObjectType):
         nested_fields=(),
         auto_handle_nested_fields=False,
         name=None,
+        override_arguments=False,
+        arguments_in_input=True,
         **options,
     ):
 
@@ -100,6 +104,7 @@ class DjangoSerializerMutation(ObjectType):
             "registry": registry,
             "skip_registry": False,
             "name": name,
+            "arguments": {}
         }
 
         output_type = registry.get_type_for_model(model)
@@ -120,7 +125,12 @@ class DjangoSerializerMutation(ObjectType):
                     serializer_class or model, for_input=operation)
 
                 if not input_type:
-                    # factory_kwargs.update({'skip_registry': True})
+                    if arguments_in_input:
+                        factory_kwargs.update({
+                            "override_arguments": override_arguments,
+                            "arguments": arguments
+                        })
+
                     input_type = factory_type(
                         "input", DjangoInputObjectType, operation, **factory_kwargs
                     )
@@ -139,7 +149,8 @@ class DjangoSerializerMutation(ObjectType):
                         )
                     }
                 )
-            global_arguments[operation].update(arguments)
+            if not arguments_in_input:
+                global_arguments[operation].update(arguments)
 
         _meta = SerializerMutationOptions(cls)
         _meta.output = cls
