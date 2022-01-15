@@ -34,12 +34,12 @@ def factory_type(operation, _type, *args, **kwargs):
         return GenericType
 
     elif operation == "input":
-
         class GenericInputType(_type):
             class Meta:
                 model = kwargs.get("model")
                 name = kwargs.get("name") or to_camel_case(
-                    "{}_{}_Generic_Type".format(kwargs.get("model").__name__, args[0])
+                    "{}_{}_Generic_Type".format(
+                        kwargs.get("model").__name__, args[0])
                 )
                 only_fields = kwargs.get("only_fields")
                 exclude_fields = kwargs.get("exclude_fields")
@@ -50,6 +50,7 @@ def factory_type(operation, _type, *args, **kwargs):
                 description = "Auto generated InputType for {} model".format(
                     kwargs.get("model").__name__
                 )
+                arguments = kwargs.get("arguments")
 
         return GenericInputType
 

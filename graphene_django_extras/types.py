@@ -45,6 +45,8 @@ class DjangoObjectOptions(BaseOptions):
     filter_fields = ()
     input_for = None
     filterset_class = None
+    arguments = {}
+    override_arguments = False
 
 
 class DjangoSerializerOptions(BaseOptions):
@@ -52,7 +54,7 @@ class DjangoSerializerOptions(BaseOptions):
     queryset = None
     serializer_class = None
 
-    arguments = None
+    arguments = {}
     fields = None
     input_fields = None
     input_field_name = None
@@ -129,7 +131,8 @@ class DjangoObjectType(ObjectType):
         if isinstance(root, cls):
             return True
         if not is_valid_django_model(type(root)):
-            raise Exception(('Received incompatible instance "{}".').format(root))
+            raise Exception(
+                ('Received incompatible instance "{}".').format(root))
         return isinstance(root, cls._meta.model)
 
     @classmethod
@@ -159,6 +162,8 @@ class DjangoInputObjectType(InputObjectType):
         filter_fields=None,
         input_for="create",
         nested_fields=(),
+        arguments={},
+        override_arguments=False,
         **options,
     ):
         assert is_valid_django_model(model), (
@@ -180,9 +185,18 @@ class DjangoInputObjectType(InputObjectType):
         input_for = input_for.lower()
 
         if not DJANGO_FILTER_INSTALLED and filter_fields:
-            raise Exception("Can only set filter_fields if Django-Filter is installed")
+            raise Exception(
+                "Can only set filter_fields if Django-Filter is installed")
 
-        django_input_fields = yank_fields_from_attrs(
+        django_input_fields = OrderedDict({})
+
+        converted_arguments = yank_fields_from_attrs(
+            arguments, _as=InputField, sort=False)
+
+        if override_arguments:
+            django_input_fields.update(converted_arguments)
+
+        django_input_fields.update(yank_fields_from_attrs(
             construct_fields(
                 model,
                 registry,
@@ -194,12 +208,15 @@ class DjangoInputObjectType(InputObjectType):
             ),
             _as=InputField,
             sort=False,
-        )
+        ))
 
         for base in reversed(cls.__mro__):
             django_input_fields.update(
                 yank_fields_from_attrs(base.__dict__, _as=InputField)
             )
+
+        if not override_arguments:
+            django_input_fields.update(converted_arguments)
 
         if container is None:
             container = type(cls.__name__, (InputObjectTypeContainer, cls), {})
@@ -257,7 +274,8 @@ class DjangoListObjectType(ObjectType):
         ).format(cls.__name__, model)
 
         if not DJANGO_FILTER_INSTALLED and filter_fields:
-            raise Exception("Can only set filter_fields if Django-Filter is installed")
+            raise Exception(
+                "Can only set filter_fields if Django-Filter is installed")
 
         assert isinstance(queryset, QuerySet) or queryset is None, (
             "The attribute queryset in {} needs to be an instance of "
@@ -280,7 +298,8 @@ class DjangoListObjectType(ObjectType):
                 "registry": registry,
                 "skip_registry": False,
             }
-            baseType = factory_type("output", DjangoObjectType, **factory_kwargs)
+            baseType = factory_type(
+                "output", DjangoObjectType, **factory_kwargs)
 
         filter_fields = filter_fields or baseType._meta.filter_fields
 
@@ -294,7 +313,8 @@ class DjangoListObjectType(ObjectType):
                 ).format(cls.__name__, global_paginator)
 
                 global_paginator = global_paginator()
-                result_container = global_paginator.get_pagination_field(baseType)
+                result_container = global_paginator.get_pagination_field(
+                    baseType)
             else:
                 result_container = DjangoListField(baseType)
 
@@ -339,7 +359,8 @@ class DjangoSerializerType(ObjectType):
     DjangoSerializerType definition
     """
 
-    ok = Boolean(description="Boolean field that return mutation result request.")
+    ok = Boolean(
+        description="Boolean field that return mutation result request.")
     errors = List(ErrorType, description="Errors list for the field")
 
     class Meta:
@@ -365,7 +386,8 @@ class DjangoSerializerType(ObjectType):
     ):
 
         if not serializer_class:
-            raise Exception("serializer_class is required on all ModelSerializerType")
+            raise Exception(
+                "serializer_class is required on all ModelSerializerType")
 
         model = serializer_class.Meta.model
 
@@ -373,7 +395,8 @@ class DjangoSerializerType(ObjectType):
             model.__name__
         )
 
-        input_field_name = input_field_name or "new_{}".format(model._meta.model_name)
+        input_field_name = input_field_name or "new_{}".format(
+            model._meta.model_name)
         output_field_name = output_field_name or model._meta.model_name
 
         input_class = getattr(cls, "Arguments", None)
@@ -412,9 +435,11 @@ class DjangoSerializerType(ObjectType):
         output_type = registry.get_type_for_model(model)
 
         if not output_type:
-            output_type = factory_type("output", DjangoObjectType, **factory_kwargs)
+            output_type = factory_type(
+                "output", DjangoObjectType, **factory_kwargs)
 
-        output_list_type = factory_type("list", DjangoListObjectType, **factory_kwargs)
+        output_list_type = factory_type(
+            "list", DjangoListObjectType, **factory_kwargs)
 
         django_fields = OrderedDict({output_field_name: Field(output_type)})
 
@@ -423,7 +448,8 @@ class DjangoSerializerType(ObjectType):
             global_arguments.update({operation: OrderedDict()})
 
             if operation != "delete":
-                input_type = registry.get_type_for_model(model, for_input=operation)
+                input_type = registry.get_type_for_model(
+                    model, for_input=operation)
 
                 if not input_type:
                     # factory_kwargs.update({'skip_registry': True})
@@ -473,7 +499,8 @@ class DjangoSerializerType(ObjectType):
 
     @classmethod
     def get_errors(cls, errors):
-        errors_dict = {cls._meta.output_field_name: None, "ok": False, "errors": errors}
+        errors_dict = {cls._meta.output_field_name: None,
+                       "ok": False, "errors": errors}
 
         return cls(**errors_dict)
 
@@ -495,7 +522,8 @@ class DjangoSerializerType(ObjectType):
                 sub_data = data.pop(field, None)
                 if sub_data:
                     serialized_data = cls._meta.nested_fields[field](
-                        data=sub_data, many=True if type(sub_data) == list else False
+                        data=sub_data, many=True if type(
+                            sub_data) == list else False
                     )
                     ok, result = cls.save(serialized_data, root, info)
                     if not ok:
@@ -511,7 +539,8 @@ class DjangoSerializerType(ObjectType):
         data = kwargs.get(cls._meta.input_field_name)
         request_type = info.context.META.get("CONTENT_TYPE", "")
         if "multipart/form-data" in request_type:
-            data.update({name: value for name, value in info.context.FILES.items()})
+            data.update(
+                {name: value for name, value in info.context.FILES.items()})
 
         nested_objs = cls.manage_nested_fields(data, root, info)
         serializer = cls._meta.serializer_class(
@@ -522,7 +551,8 @@ class DjangoSerializerType(ObjectType):
         if not ok:
             return cls.get_errors(obj)
         elif nested_objs:
-            [getattr(obj, field).add(*objs) for field, objs in nested_objs.items()]
+            [getattr(obj, field).add(*objs)
+             for field, objs in nested_objs.items()]
         return cls.perform_mutate(obj, info)
 
     @classmethod
@@ -553,7 +583,8 @@ class DjangoSerializerType(ObjectType):
         data = kwargs.get(cls._meta.input_field_name)
         request_type = info.context.META.get("CONTENT_TYPE", "")
         if "multipart/form-data" in request_type:
-            data.update({name: value for name, value in info.context.FILES.items()})
+            data.update(
+                {name: value for name, value in info.context.FILES.items()})
 
         pk = data.pop("id")
         old_obj = get_Object_or_None(cls._meta.model, pk=pk)
@@ -570,7 +601,8 @@ class DjangoSerializerType(ObjectType):
             if not ok:
                 return cls.get_errors(obj)
             elif nested_objs:
-                [getattr(obj, field).add(*objs) for field, objs in nested_objs.items()]
+                [getattr(obj, field).add(*objs)
+                 for field, objs in nested_objs.items()]
             return cls.perform_mutate(obj, info)
         else:
             return cls.get_errors(
@@ -611,9 +643,11 @@ class DjangoSerializerType(ObjectType):
     @classmethod
     def list(cls, manager, filterset_class, filtering_args, root, info, **kwargs):
 
-        qs = queryset_factory(cls._meta.queryset or manager, root, info, **kwargs)
+        qs = queryset_factory(
+            cls._meta.queryset or manager, root, info, **kwargs)
 
-        filter_kwargs = {k: v for k, v in kwargs.items() if k in filtering_args}
+        filter_kwargs = {k: v for k,
+                         v in kwargs.items() if k in filtering_args}
 
         qs = filterset_class(data=filter_kwargs, queryset=qs).qs
         count = qs.count()

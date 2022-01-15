@@ -30,7 +30,8 @@ def get_reverse_fields(model):
 
     for name, field in reverse_fields.items():
         # Django =>1.9 uses 'rel', django <1.9 uses 'related'
-        related = getattr(field, "rel", None) or getattr(field, "related", None)
+        related = getattr(field, "rel", None) or getattr(
+            field, "related", None)
         if isinstance(related, ManyToOneRel):
             yield (name, related)
         elif isinstance(related, ManyToManyRel) and not related.symmetrical:
@@ -175,7 +176,8 @@ def clean_dict(d):
     if isinstance(d, list):
         return [v for v in (clean_dict(v) for v in d) if v]
     return OrderedDict(
-        [(k, v) for k, v in ((k, clean_dict(v)) for k, v in list(d.items())) if v]
+        [(k, v) for k, v in ((k, clean_dict(v))
+                             for k, v in list(d.items())) if v]
     )
 
 
@@ -301,7 +303,8 @@ def get_related_fields(model):
 
 def find_field(field, fields_dict):
     temp = fields_dict.get(
-        field.name.value, fields_dict.get(to_snake_case(field.name.value), None)
+        field.name.value, fields_dict.get(
+            to_snake_case(field.name.value), None)
     )
 
     return temp
@@ -322,7 +325,8 @@ def recursive_params(
                 prefetch_related,
             )
             [select_related.append(x) for x in a if x not in select_related]
-            [prefetch_related.append(x) for x in b if x not in prefetch_related]
+            [prefetch_related.append(x)
+             for x in b if x not in prefetch_related]
             continue
 
         if isinstance(field, InlineFragmentNode):
@@ -334,12 +338,14 @@ def recursive_params(
                 prefetch_related,
             )
             [select_related.append(x) for x in a if x not in select_related]
-            [prefetch_related.append(x) for x in b if x not in prefetch_related]
+            [prefetch_related.append(x)
+             for x in b if x not in prefetch_related]
             continue
 
         temp = available_related_fields.get(
             field.name.value,
-            available_related_fields.get(to_snake_case(field.name.value), None),
+            available_related_fields.get(
+                to_snake_case(field.name.value), None),
         )
 
         if temp and temp.name not in [prefetch_related + select_related]:
@@ -356,7 +362,8 @@ def recursive_params(
                 prefetch_related,
             )
             [select_related.append(x) for x in a if x not in select_related]
-            [prefetch_related.append(x) for x in b if x not in prefetch_related]
+            [prefetch_related.append(x)
+             for x in b if x not in prefetch_related]
 
     return select_related, prefetch_related
 
@@ -394,7 +401,8 @@ def queryset_factory(manager, root, info, **kwargs):
 
     if select_related and prefetch_related:
         return _get_queryset(
-            manager.select_related(*select_related).prefetch_related(*prefetch_related)
+            manager.select_related(
+                *select_related).prefetch_related(*prefetch_related)
         )
     elif not select_related and prefetch_related:
         return _get_queryset(manager.prefetch_related(*prefetch_related))
