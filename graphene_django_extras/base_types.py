@@ -16,8 +16,8 @@ def factory_type(operation, _type, *args, **kwargs):
         class GenericType(_type):
             class Meta:
                 model = kwargs.get("model")
-                name = kwargs.get("name") or to_camel_case(
-                    "{}_Generic_Type".format(kwargs.get("model").__name__)
+                name = to_camel_case(
+                    "{}_Generic_Type".format(kwargs.get("name") or kwargs.get("model").__name__)
                 )
                 only_fields = kwargs.get("only_fields")
                 exclude_fields = kwargs.get("exclude_fields")
@@ -28,7 +28,7 @@ def factory_type(operation, _type, *args, **kwargs):
                 skip_registry = kwargs.get("skip_registry")
                 # fields = kwargs.get('fields')
                 description = "Auto generated Type for {} model".format(
-                    kwargs.get("model").__name__
+                    kwargs.get("name") or kwargs.get("model").__name__
                 )
 
         return GenericType
@@ -37,9 +37,9 @@ def factory_type(operation, _type, *args, **kwargs):
         class GenericInputType(_type):
             class Meta:
                 model = kwargs.get("model")
-                name = kwargs.get("name") or to_camel_case(
+                name = to_camel_case(
                     "{}_{}_Generic_Type".format(
-                        kwargs.get("model").__name__, args[0])
+                       kwargs.get("name") or kwargs.get("model").__name__, args[0])
                 )
                 only_fields = kwargs.get("only_fields")
                 exclude_fields = kwargs.get("exclude_fields")
@@ -48,7 +48,7 @@ def factory_type(operation, _type, *args, **kwargs):
                 skip_registry = kwargs.get("skip_registry")
                 input_for = args[0]
                 description = "Auto generated InputType for {} model".format(
-                    kwargs.get("model").__name__
+                    kwargs.get("name") or kwargs.get("model").__name__
                 )
                 arguments = kwargs.get("arguments")
 

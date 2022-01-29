@@ -145,6 +145,7 @@ def construct_fields(
         for name, field in _model_fields:
             if input_flag == "create" and name == "id":
                 continue
+   
             is_included = include_fields and name in include_fields
             nested_field = nested_fields.get(name, None) if isinstance(
                 nested_fields, dict) else name in nested_fields
