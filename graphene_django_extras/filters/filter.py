@@ -1,7 +1,12 @@
 # -*- coding: utf-8 -*-
-from django_filters.filterset import BaseFilterSet, FilterSet
+import operator
+from django_filters.filterset import BaseFilterSet, FilterSet, FilterSetMetaclass, FilterSetOptions
+from django_filters import CharFilter
 from django_filters.filterset import FILTER_FOR_DBFIELD_DEFAULTS
 from graphene_django.filter.utils import replace_csv_filters
+
+from django.db.models import Q
+from itertools import reduce
 
 
 def get_filterset_class(filterset_class, **meta):
@@ -46,3 +51,26 @@ def custom_filterset_factory(model, filterset_base_class=FilterSet, **meta):
         {"Meta": meta_class},
     )
     return filterset
+
+class SearchFilterSetOptions(FilterSetOptions):
+    def __init__(self, options=None):
+        super().__init__(options)
+        self.search_fields = getattr(options, "search_fields", None)
+
+class SearchFilterSetMetaClass(FilterSetMetaclass):
+    def __new__(cls, name, bases, attrs):
+        new_class = super().__new__(name, bases, attrs)
+        new_class._meta = SearchFilterSetOptions(getattr(new_class, "Meta", None))
+        return new_class
+
+class SearchFilterSet(BaseFilterSet, metaclass=SearchFilterSetMetaClass):
+    search = CharFilter()
+
+    def filter_queryset(self, queryset):
+        qs = super().filter_queryset(queryset)
+        if 'search' in self.form.cleaned_data:
+            search_fields = self._meta.search_fields
+            search_value = self.form.cleaned_data["search"]
+            list_of_Q = [Q(**{f'{key}__icontains': search_value}) for key in search_fields]
+            qs.filter(reduce(operator.or_, list_of_Q))
+        return qs

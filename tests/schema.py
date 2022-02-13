@@ -18,7 +18,7 @@ from graphene_django_extras.types import (
     DjangoSerializerType,
     DjangoObjectType,
 )
-from .filtersets import UserFilterSet
+from .filtersets import UserFilterSet, UserSearchFilterSet
 from .serializers import UserSerializer
 
 
@@ -42,6 +42,13 @@ class User1ListType(DjangoListObjectType):
         pagination = LimitOffsetGraphqlPagination(
             default_limit=25, ordering="-username"
         )
+
+class User2ListType(DjangoListObjectType):
+    class Meta:
+        description = " Type definition for user list with search filterset"
+        model = User
+        pagination = LimitOffsetGraphqlPagination(default_limit=25, ordering="-pk")
+        filterset_class = UserSearchFilterSet
 
 
 class UserModelType(DjangoSerializerType):
@@ -82,6 +89,7 @@ class Query(graphene.ObjectType):
         User1ListType, filterset_class=UserFilterSet, description=_("All Users query")
     )
     all_users4 = DjangoFilterListField(UserType)
+    all_users5 = DjangoListObjectField(User2ListType)
 
     # Defining a query for a single user
     # The DjangoObjectField have a ID type input field,

@@ -35,6 +35,24 @@ ALL_USERS4 = """query {
   }
 }
 """
+
+ALL_USERS5 = """query {
+  allUsers5 {
+    id
+    username
+    first_name
+    last_name
+  }
+}"""
+
+ALL_USERS5_WITH_SEARCH = """query {
+  allUsers5(search: %(search)s) {
+    first_name
+    last_name
+  }
+}"""
+
+
 ALL_USERS3_WITH_FILTER = """query {
   allUsers3 (%(filter)s) {
     results {

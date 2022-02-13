@@ -1,5 +1,6 @@
 import django_filters as filters
 from django.contrib.auth import models as auth_models
+from graphene_django_extras.filters import SearchFilterSet
 
 
 class UserFilterSet(filters.FilterSet):
@@ -13,3 +14,9 @@ class UserFilterSet(filters.FilterSet):
             "email": ("icontains", "iexact"),
             "is_staff": ("exact",),
         }
+
+class UserSearchFilterSet(SearchFilterSet):
+    class Meta:
+        model = auth_models.User
+        search_fields = ["first_name", "last_name"]
+    
