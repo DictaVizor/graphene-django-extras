@@ -43,11 +43,13 @@ class User1ListType(DjangoListObjectType):
             default_limit=25, ordering="-username"
         )
 
+
 class User2ListType(DjangoListObjectType):
     class Meta:
         description = " Type definition for user list with search filterset"
         model = User
-        pagination = LimitOffsetGraphqlPagination(default_limit=25, ordering="-pk")
+        pagination = LimitOffsetGraphqlPagination(
+            default_limit=25, ordering="-pk")
         filterset_class = UserSearchFilterSet
 
 
@@ -80,13 +82,15 @@ class UserModelType(DjangoSerializerType):
 
 class Query(graphene.ObjectType):
     # Possible User list queries definitions
-    all_users = DjangoListObjectField(User1ListType, description=_("All Users query"))
+    all_users = DjangoListObjectField(
+        User1ListType, description=_("All Users query"))
     all_users1 = DjangoFilterPaginateListField(
         UserType, pagination=LimitOffsetGraphqlPagination()
     )
     all_users2 = DjangoFilterListField(UserType)
     all_users3 = DjangoListObjectField(
-        User1ListType, filterset_class=UserFilterSet, description=_("All Users query")
+        User1ListType, filterset_class=UserFilterSet, description=_(
+            "All Users query")
     )
     all_users4 = DjangoFilterListField(UserType)
     all_users5 = DjangoListObjectField(User2ListType)

@@ -9,6 +9,12 @@ from .lookups import (
     TIME_LOOKUPS,
 )
 
+from .filter import (
+    SearchFilterSet, 
+    SearchFilterSetMetaClass, 
+    SearchFilterSetOptions
+    )
+
 __all__ = (
     "ALL_LOOKUPS",
     "BASIC_LOOKUPS",
@@ -17,4 +23,7 @@ __all__ = (
     "DATETIME_LOOKUPS",
     "DATE_LOOKUPS",
     "TIME_LOOKUPS",
+    "SearchFilterSet",
+    "SerachFilterSetMetaClass",
+    "SerachFilterSetOptions",
 )

@@ -46,9 +46,11 @@ ALL_USERS5 = """query {
 }"""
 
 ALL_USERS5_WITH_SEARCH = """query {
-  allUsers5(search: %(search)s) {
-    first_name
-    last_name
+  allUsers5 (search: %(search)s) {
+    results {
+      firstName
+      lastName
+    }
   }
 }"""
 

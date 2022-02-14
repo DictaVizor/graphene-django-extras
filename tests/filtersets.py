@@ -15,8 +15,9 @@ class UserFilterSet(filters.FilterSet):
             "is_staff": ("exact",),
         }
 
+
 class UserSearchFilterSet(SearchFilterSet):
     class Meta:
         model = auth_models.User
         search_fields = ["first_name", "last_name"]
-    
+        fields = []

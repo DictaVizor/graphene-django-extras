@@ -65,6 +65,8 @@ class DjangoSerializerOptions(BaseOptions):
     output_list_type = None
     nested_fields = None
     interfaces = ()
+    arguments = {}
+    override_arguments = False
 
 
 class DjangoObjectType(ObjectType):
@@ -382,6 +384,8 @@ class DjangoSerializerType(ObjectType):
         filter_fields=None,
         description="",
         filterset_class=None,
+        arguments={},
+        override_arguments=False,
         **options,
     ):
 
@@ -430,6 +434,8 @@ class DjangoSerializerType(ObjectType):
             "skip_registry": False,
             "filterset_class": filterset_class,
             "results_field_name": results_field_name,
+            "arguments": arguments,
+            "override_arguments": override_arguments,
         }
 
         output_type = registry.get_type_for_model(model)

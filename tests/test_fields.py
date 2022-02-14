@@ -109,7 +109,8 @@ class DjangoSerializerTypeTest(ParentTest, TestCase):
         "data": {
             "users": {
                 "results": [
-                    {"id": "1", "username": "graphql", "email": "eamigop86@gmail.com"}
+                    {"id": "1", "username": "graphql",
+                        "email": "eamigop86@gmail.com"}
                 ],
                 "totalCount": 1,
             }
@@ -162,29 +163,33 @@ class DjangoCustomResolverTest(ParentTest, TestCase):
 
 class DjangoListObjectFieldWithSearchFilterSetTest(ParentTest, TestCase):
     expected_return_payload = {
-        "data": {"allUsers5": {"results": [{"first_name": "Victor", "last_name": "Diaz"}, {"first_name": "Ernesto", "last_name": "Diaz"}]}}
+        "data": {"allUsers5": {"results": [{"firstName": "Ernesto", "lastName": "Diaz"}, {"firstName": "Victor", "lastName": "Diaz"}]}}
     }
 
     @property
     def query(self):
         return queries.ALL_USERS5_WITH_SEARCH % {
-            "search": "diaz"
+            "search": '"diaz"'
         }
 
     def setUp(self):
-        self.user = factories.UserFactory(first_name="Victor", last_name="Diaz", username="account1", email="account2@fake.com")
-        self.user2 = factories.UserFactory(first_name="Ernesto", last_name="Diaz", username="account2", email="account1@fake.com")
+        self.user = factories.UserFactory(
+            first_name="Victor", last_name="Diaz", username="account1", email="account2@fake.com")
+        self.user2 = factories.UserFactory(
+            first_name="Ernesto", last_name="Diaz", username="account2", email="account1@fake.com")
         self.client = Client()
         self.response = self.client.query(self.query)
         self.data = self.response.json()
 
     def test_search_first_name(self):
         query = queries.ALL_USERS5_WITH_SEARCH % {
-            "search": "victor"
+            "search": '"victor"'
         }
         response = self.client.query(query)
         data = response.json()
         self.assertIn("allUsers5", data["data"])
-        self.assertIn("results", data["data"][["allUsers5"]])
+
+        self.assertIn("results", data["data"]["allUsers5"])
         self.assertTrue(data["data"]["allUsers5"]["results"])
-        self.assertEqual(data["data"]["allUsers5"]["results"][0]["first_name"], self.user.first_name)
+        self.assertEqual(data["data"]["allUsers5"]["results"]
+                         [0]["firstName"], self.user.first_name)
